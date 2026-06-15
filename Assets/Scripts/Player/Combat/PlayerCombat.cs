@@ -56,7 +56,7 @@ public class PlayerCombat : MonoBehaviour
         Bullet b = bulletObj.GetComponent<Bullet>();
         if (b != null)
         {
-            b.isPlayerBullet = true;
+            b.shooter = gameObject;
         }
     }
 }

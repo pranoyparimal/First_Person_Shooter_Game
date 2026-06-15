@@ -91,10 +91,21 @@ public class EnemyController : MonoBehaviour
         float distance = Vector3.Distance(transform.position, player.position);
         if (distance <= preferredDistance + 5f)
         {
-            if (fireTimer >= fireRate)
+            // Check line of sight so they don't shoot walls
+            Vector3 targetPoint = player.position + Vector3.up * 0.5f;
+            Vector3 fireDirection = (targetPoint - gunBarrel.position).normalized;
+
+            if (Physics.Raycast(gunBarrel.position, fireDirection, out RaycastHit hit, distance))
             {
-                FireBullet();
-                fireTimer = 0f;
+                // Only shoot if the raycast hits the player (or their arm/gun)
+                if (hit.collider.GetComponentInParent<PlayerCombat>() != null)
+                {
+                    if (fireTimer >= fireRate)
+                    {
+                        FireBullet();
+                        fireTimer = 0f;
+                    }
+                }
             }
         }
     }
@@ -115,7 +126,7 @@ public class EnemyController : MonoBehaviour
         Bullet b = bulletObj.GetComponent<Bullet>();
         if (b != null)
         {
-            b.isPlayerBullet = false;
+            b.shooter = gameObject;
         }
     }
 }

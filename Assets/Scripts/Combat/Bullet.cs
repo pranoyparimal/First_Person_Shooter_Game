@@ -6,7 +6,7 @@ public class Bullet : MonoBehaviour
     public float speed = 40f; 
     public float lifeTime = 3f;
     public int damage = 20;   
-    public bool isPlayerBullet; // True if player shot it, false if enemy
+    public GameObject shooter; // The specific character who fired the bullet
 
     private Rigidbody rb;
 
@@ -26,13 +26,14 @@ public class Bullet : MonoBehaviour
         // Ignore other bullets
         if (other.GetComponent<Bullet>() != null) return;
 
-        // Determine if we hit the player (or something on the player like the gun/arm)
-        bool hitPlayer = other.CompareTag("Player") || other.GetComponentInParent<PlayerCombat>() != null;
+        // Prevent the bullet from hitting the person who shot it
+        if (shooter != null)
+        {
+            if (other.gameObject == shooter || other.transform.IsChildOf(shooter.transform))
+                return;
+        }
 
-        // Prevent self-damage
-        if (isPlayerBullet && hitPlayer) return;
-        if (!isPlayerBullet && !hitPlayer) return;
-
+        // Check if we hit anything with health
         Health targetHealth = other.GetComponent<Health>();
         if (targetHealth == null)
         {
@@ -42,10 +43,10 @@ public class Bullet : MonoBehaviour
         if (targetHealth != null)
         {
             targetHealth.TakeDamage(damage);
-            string shooter = isPlayerBullet ? "Player" : "Enemy";
-            Debug.Log($"{shooter}'s bullet hit {other.name} for {damage} damage!");
+            Debug.Log($"Bullet hit {other.name} for {damage} damage!");
         }
 
+        // The bullet will now destroy itself when it hits ANYTHING else (like walls, floors, or enemies)
         Destroy(gameObject);
     }
 }
