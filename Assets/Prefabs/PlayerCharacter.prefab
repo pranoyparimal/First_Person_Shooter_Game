@@ -19,6 +19,8 @@ GameObject:
   - component: {fileID: 1448586897525923252}
   - component: {fileID: 8390701950006930632}
   - component: {fileID: 4465360324234425411}
+  - component: {fileID: 4233146368340255310}
+  - component: {fileID: 878616233859825785}
   m_Layer: 0
   m_Name: PlayerCharacter
   m_TagString: Player
@@ -274,6 +276,34 @@ CapsuleCollider:
   m_Height: 1.15
   m_Direction: 1
   m_Center: {x: 0, y: 0.06, z: 0}
+--- !u!114 &4233146368340255310
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 700000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af7bf45681a8e864b89969566907bbd9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Health
+  maxHealth: 100
+  currentHealth: 0
+--- !u!114 &878616233859825785
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 700000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 428ffabbe05c5884ca3b04a6cd0ed41d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerCombat
+  bulletPrefab: {fileID: 2079268874596452571, guid: 36bc451942e153b4d865df49acee7576, type: 3}
+  fireRate: 0.2
 --- !u!1 &700000020
 GameObject:
   m_ObjectHideFlags: 0

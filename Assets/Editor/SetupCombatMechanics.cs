@@ -31,7 +31,7 @@ public class SetupCombatMechanics
         {
             GameObject tempBullet = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             tempBullet.name = "Bullet";
-            tempBullet.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+            tempBullet.transform.localScale = new Vector3(0.08f, 0.08f, 0.08f); // Much smaller bullet
             
             MeshRenderer mr = tempBullet.GetComponent<MeshRenderer>();
             mr.sharedMaterial = bulletMat;
@@ -47,6 +47,14 @@ public class SetupCombatMechanics
             bulletPrefab = PrefabUtility.SaveAsPrefabAsset(tempBullet, bulletPrefabPath);
             Object.DestroyImmediate(tempBullet);
         }
+        else
+        {
+            // If it already exists, just update its scale
+            GameObject tempBullet = PrefabUtility.LoadPrefabContents(bulletPrefabPath);
+            tempBullet.transform.localScale = new Vector3(0.08f, 0.08f, 0.08f);
+            PrefabUtility.SaveAsPrefabAsset(tempBullet, bulletPrefabPath);
+            PrefabUtility.UnloadPrefabContents(tempBullet);
+        }
 
         // 4. Update Enemy Prefab
         string enemyPrefabPath = "Assets/Prefabs/Enemy.prefab";
@@ -56,7 +64,6 @@ public class SetupCombatMechanics
             Rigidbody enemyRb = enemyRoot.GetComponent<Rigidbody>();
             if (enemyRb != null)
             {
-                // Freeze X and Z rotation so the enemy doesn't tip over when walking
                 enemyRb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
             }
 
@@ -68,14 +75,33 @@ public class SetupCombatMechanics
                 ecSo.ApplyModifiedProperties();
             }
 
+            if (enemyRoot.GetComponent<Health>() == null)
+                enemyRoot.AddComponent<Health>();
+
             PrefabUtility.SaveAsPrefabAsset(enemyRoot, enemyPrefabPath);
             PrefabUtility.UnloadPrefabContents(enemyRoot);
-            
-            Debug.Log("Combat Mechanics Setup Complete! Bullet Prefab generated and assigned to Enemy.");
         }
-        else
+
+        // 5. Update Player Prefab
+        string playerPrefabPath = "Assets/Prefabs/PlayerCharacter.prefab";
+        GameObject playerRoot = PrefabUtility.LoadPrefabContents(playerPrefabPath);
+        if (playerRoot != null)
         {
-            Debug.LogError("Could not find Enemy.prefab. Did you run the Weapons & Enemies setup first?");
+            if (playerRoot.GetComponent<Health>() == null)
+                playerRoot.AddComponent<Health>();
+
+            PlayerCombat pc = playerRoot.GetComponent<PlayerCombat>();
+            if (pc == null)
+                pc = playerRoot.AddComponent<PlayerCombat>();
+            
+            SerializedObject pcSo = new SerializedObject(pc);
+            pcSo.FindProperty("bulletPrefab").objectReferenceValue = bulletPrefab;
+            pcSo.ApplyModifiedProperties();
+
+            PrefabUtility.SaveAsPrefabAsset(playerRoot, playerPrefabPath);
+            PrefabUtility.UnloadPrefabContents(playerRoot);
         }
+        
+        Debug.Log("Combat Mechanics Setup Complete! Health, Player Combat, and Bullets configured.");
     }
 }

@@ -111,6 +111,11 @@ public class EnemyController : MonoBehaviour
         // Align the bullet with the fire direction
         Quaternion bulletRot = Quaternion.LookRotation(fireDirection);
 
-        Instantiate(bulletPrefab, spawnPos, bulletRot);
+        GameObject bulletObj = Instantiate(bulletPrefab, spawnPos, bulletRot);
+        Bullet b = bulletObj.GetComponent<Bullet>();
+        if (b != null)
+        {
+            b.isPlayerBullet = false;
+        }
     }
 }

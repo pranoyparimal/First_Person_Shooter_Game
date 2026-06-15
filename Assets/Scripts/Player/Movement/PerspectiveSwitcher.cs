@@ -13,6 +13,7 @@ public class PerspectiveSwitcher : MonoBehaviour
 
     public bool IsFirstPerson { get; private set; } = true;
     public LookController ActiveLookController => IsFirstPerson ? firstPersonLook : thirdPersonLook;
+    public Transform ActiveCameraTransform => IsFirstPerson ? firstPersonCamera.transform : thirdPersonCamera.transform;
 
     private void Start()
     {
