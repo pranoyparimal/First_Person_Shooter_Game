@@ -32,11 +32,11 @@ public class EnemyController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         startYRotation = transform.eulerAngles.y;
         
-        // Find player
-        GameObject pObj = GameObject.FindGameObjectWithTag("Player");
-        if (pObj != null)
+        // Find player securely by looking for the PlayerCombat script attached to their body
+        PlayerCombat pc = FindFirstObjectByType<PlayerCombat>();
+        if (pc != null)
         {
-            player = pObj.transform;
+            player = pc.transform;
         }
 
         // Find gun barrel
@@ -113,16 +113,12 @@ public class EnemyController : MonoBehaviour
             // Is player inside the vision cone?
             if (angleToPlayer <= fieldOfView / 2f)
             {
-                // Check Line of Sight
-                Vector3 targetPoint = player.position + Vector3.up * 0.5f;
-                Vector3 rayDir = (targetPoint - gunBarrel.position).normalized;
+                Vector3 targetPoint = GetPlayerCenter();
                 
-                if (Physics.Raycast(gunBarrel.position, rayDir, out RaycastHit hit, distanceToPlayer))
+                if (CheckLineOfSight(targetPoint, distanceToPlayer + 2f))
                 {
-                    if (hit.collider.GetComponentInParent<PlayerCombat>() != null)
-                    {
-                        isAlert = true; // Spotted!
-                    }
+                    isAlert = true; // Spotted!
+                    Debug.Log("<color=green>[Enemy Vision]</color> Spotted the player!");
                 }
             }
         }
@@ -179,22 +175,64 @@ public class EnemyController : MonoBehaviour
         if (distanceToPlayer <= preferredDistance + 5f)
         {
             // Check line of sight so they don't shoot walls
-            Vector3 targetPoint = player.position + Vector3.up * 0.5f;
-            Vector3 fireDirection = (targetPoint - gunBarrel.position).normalized;
+            Vector3 targetPoint = GetPlayerCenter();
 
-            if (Physics.Raycast(gunBarrel.position, fireDirection, out RaycastHit hit, distanceToPlayer))
+            if (CheckLineOfSight(targetPoint, distanceToPlayer + 2f))
             {
-                // Only shoot if the raycast hits the player (or their arm/gun)
-                if (hit.collider.GetComponentInParent<PlayerCombat>() != null)
+                if (fireTimer >= fireRate)
                 {
-                    if (fireTimer >= fireRate)
-                    {
-                        FireBullet();
-                        fireTimer = 0f;
-                    }
+                    FireBullet();
+                    fireTimer = 0f;
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Performs a robust line-of-sight check that ignores the enemy's own colliders using RaycastAll.
+    /// </summary>
+    private bool CheckLineOfSight(Vector3 targetPoint, float maxDistance, bool logDebug = true)
+    {
+        Vector3 rayDir = (targetPoint - gunBarrel.position).normalized;
+        RaycastHit[] hits = Physics.RaycastAll(gunBarrel.position, rayDir, maxDistance);
+        
+        float closestDist = float.MaxValue;
+        RaycastHit closestHit = new RaycastHit();
+        bool foundValidHit = false;
+
+        foreach (var hit in hits)
+        {
+            // Ignore anything attached to this enemy
+            if (hit.transform.IsChildOf(this.transform))
+                continue;
+
+            // Ignore triggers (like bullet triggers)
+            if (hit.collider.isTrigger)
+                continue;
+
+            if (hit.distance < closestDist)
+            {
+                closestDist = hit.distance;
+                closestHit = hit;
+                foundValidHit = true;
+            }
+        }
+
+        if (foundValidHit)
+        {
+            if (closestHit.collider.GetComponentInParent<PlayerCombat>() != null)
+            {
+                Debug.Log($"Enemy Raycast hit the player: {closestHit.collider.gameObject.name}");
+                return true; // We hit the player!
+            }
+            else
+            {
+                if (logDebug) Debug.Log($"<color=orange>[LOS Blocked]</color> Enemy vision blocked by: {closestHit.collider.name}");
+                return false; // We hit a wall or obstacle
+            }
+        }
+        
+        return false; // Hit nothing
     }
 
     /// <summary>
@@ -203,7 +241,7 @@ public class EnemyController : MonoBehaviour
     private void FireBullet()
     {
         // Calculate the direction from the gun barrel directly to the player's chest/head
-        Vector3 targetPoint = player.position + Vector3.up * 0.5f;
+        Vector3 targetPoint = GetPlayerCenter();
         Vector3 fireDirection = (targetPoint - gunBarrel.position).normalized;
 
         // Instantiate bullet slightly ahead of the gun so it doesn't collide with the enemy immediately
@@ -218,5 +256,46 @@ public class EnemyController : MonoBehaviour
         {
             b.shooter = gameObject;
         }
+    }
+
+    /// <summary>
+    /// Gets the true center of the player's body by finding their CapsuleCollider.
+    /// </summary>
+    private Vector3 GetPlayerCenter()
+    {
+        if (player == null) return Vector3.zero;
+
+        CapsuleCollider cap = player.GetComponent<CapsuleCollider>();
+        if (cap != null)
+        {
+            return player.TransformPoint(cap.center);
+        }
+        
+        // Fallback if no colliders are found: the player pivot is usually in the center of the torso (y=0.5)
+        return player.position;
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (!Application.isPlaying || player == null || gunBarrel == null) return;
+
+        Vector3 targetPoint = GetPlayerCenter();
+        Vector3 rayDir = (targetPoint - gunBarrel.position).normalized;
+        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        float maxDist = distanceToPlayer + 2f;
+
+        // Draw Vision Cone boundaries roughly
+        Gizmos.color = new Color(1, 1, 0, 0.3f); // Semi-transparent yellow
+        Gizmos.DrawRay(transform.position, Quaternion.Euler(0, fieldOfView / 2f, 0) * transform.forward * 5f);
+        Gizmos.DrawRay(transform.position, Quaternion.Euler(0, -fieldOfView / 2f, 0) * transform.forward * 5f);
+
+        // Draw Line of Sight
+        bool canSeePlayer = CheckLineOfSight(targetPoint, maxDist, false); // false to avoid spamming console
+        
+        Gizmos.color = canSeePlayer ? Color.green : Color.red;
+        Gizmos.DrawLine(gunBarrel.position, gunBarrel.position + rayDir * maxDist);
+
+        // Draw the exact point we are trying to look at
+        Gizmos.DrawWireSphere(targetPoint, 0.2f);
     }
 }
