@@ -44,11 +44,27 @@ public class PlayerCombat : MonoBehaviour
         Transform activeCamera = perspectiveSwitcher.ActiveCameraTransform;
         if (activeCamera == null) return;
 
-        // In 3D shooters, the bullet goes towards where the camera is looking.
-        // We will spawn the bullet at the gun barrel, but angle it to fly parallel to the camera's forward vector.
-        Vector3 fireDirection = activeCamera.forward;
+        // Perform a raycast from the center of the screen/camera
+        Ray ray = new Ray(activeCamera.position, activeCamera.forward);
+        Vector3 targetPoint;
+
+        // Ignore the player's own colliders by layer or just let the bullet's own logic ignore shooter
+        // We will do a general Raycast and if we hit something, that's our target.
+        // maxDistance is 100f
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f))
+        {
+            targetPoint = hit.point;
+        }
+        else
+        {
+            // If we hit nothing (e.g. aiming at the sky), aim 100 meters forward
+            targetPoint = ray.GetPoint(100f);
+        }
+
+        // Calculate fire direction from the gun barrel to the precise target point
+        Vector3 fireDirection = (targetPoint - gunBarrel.position).normalized;
         
-        // Spawn slightly ahead of the gun barrel so it doesn't collide with the player immediately
+        // Spawn slightly ahead of the gun barrel
         Vector3 spawnPos = gunBarrel.position + fireDirection * 0.5f;
         Quaternion bulletRot = Quaternion.LookRotation(fireDirection);
 
@@ -58,5 +74,30 @@ public class PlayerCombat : MonoBehaviour
         {
             b.shooter = gameObject;
         }
+    }
+
+    private void OnGUI()
+    {
+        // Draw a clean, minimalist crosshair exactly in the center of the screen
+        float size = 8f;       // Length of the crosshair lines
+        float thickness = 2f;  // Thickness of the lines
+        float gap = 4f;        // Gap between the center and the lines
+
+        Vector2 center = new Vector2(Screen.width / 2f, Screen.height / 2f);
+
+        // Optional: Save original color to restore later
+        Color originalColor = GUI.color;
+        GUI.color = new Color(1f, 1f, 1f, 0.8f); // Slightly transparent white
+
+        // Left Line
+        GUI.DrawTexture(new Rect(center.x - gap - size, center.y - thickness / 2f, size, thickness), Texture2D.whiteTexture);
+        // Right Line
+        GUI.DrawTexture(new Rect(center.x + gap, center.y - thickness / 2f, size, thickness), Texture2D.whiteTexture);
+        // Top Line
+        GUI.DrawTexture(new Rect(center.x - thickness / 2f, center.y - gap - size, thickness, size), Texture2D.whiteTexture);
+        // Bottom Line
+        GUI.DrawTexture(new Rect(center.x - thickness / 2f, center.y + gap, thickness, size), Texture2D.whiteTexture);
+
+        GUI.color = originalColor;
     }
 }
