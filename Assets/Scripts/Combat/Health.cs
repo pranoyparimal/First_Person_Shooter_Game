@@ -15,6 +15,13 @@ public class Health : MonoBehaviour
     {
         currentHealth -= amount;
         
+        // Damage Awareness: Alert the enemy if they are shot in the back
+        EnemyController ec = GetComponent<EnemyController>();
+        if (ec != null)
+        {
+            ec.TriggerAlert();
+        }
+
         if (currentHealth <= 0)
         {
             Die();
