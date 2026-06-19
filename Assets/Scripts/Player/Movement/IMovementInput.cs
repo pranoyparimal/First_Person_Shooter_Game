@@ -1,10 +1,13 @@
 using UnityEngine;
 
-public interface IMovementInput
+namespace FPSGame.Player.Movement
 {
-    Vector2 MoveInput { get; }
-    Vector2 LookInput { get; }
-    bool JumpPressed { get; }
-    bool SprintHeld { get; }
-    bool TogglePerspectivePressed { get; }
+    public interface IMovementInput
+    {
+        Vector2 MoveInput { get; }
+        Vector2 LookInput { get; }
+        bool JumpPressed { get; }
+        bool SprintHeld { get; }
+        bool TogglePerspectivePressed { get; }
+    }
 }

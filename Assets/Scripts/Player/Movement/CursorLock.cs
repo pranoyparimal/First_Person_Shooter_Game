@@ -1,41 +1,44 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[DisallowMultipleComponent]
-public class CursorLock : MonoBehaviour
+namespace FPSGame.Player.Movement
 {
-    [SerializeField] private bool lockOnStart = true;
-
-    private void Start()
+    [DisallowMultipleComponent]
+    public class CursorLock : MonoBehaviour
     {
-        if (lockOnStart)
-        {
-            LockCursor();
-        }
-    }
+        [SerializeField] private bool lockOnStart = true;
 
-    private void Update()
-    {
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        private void Start()
         {
-            UnlockCursor();
+            if (lockOnStart)
+            {
+                LockCursor();
+            }
         }
 
-        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame && Cursor.lockState != CursorLockMode.Locked)
+        private void Update()
         {
-            LockCursor();
+            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            {
+                UnlockCursor();
+            }
+
+            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame && Cursor.lockState != CursorLockMode.Locked)
+            {
+                LockCursor();
+            }
         }
-    }
 
-    public void LockCursor()
-    {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-    }
+        public void LockCursor()
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
 
-    public void UnlockCursor()
-    {
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        public void UnlockCursor()
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
     }
 }

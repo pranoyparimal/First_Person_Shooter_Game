@@ -1,0 +1,21 @@
+{
+    "name": "FPSGame.Editor",
+    "rootNamespace": "FPSGame.Editor",
+    "references": [
+        "FPSGame.Core",
+        "FPSGame.Combat",
+        "FPSGame.Player",
+        "FPSGame.Enemies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

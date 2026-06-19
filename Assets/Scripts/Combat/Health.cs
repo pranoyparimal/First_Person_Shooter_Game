@@ -1,47 +1,97 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using FPSGame.Core.Interfaces;
+using FPSGame.Core.Events;
 
-public class Health : MonoBehaviour
+namespace FPSGame.Combat
 {
-    public int maxHealth = 100;
-    public int currentHealth;
-
-    private void Start()
+    /// <summary>
+    /// Defines what happens when an object's health reaches zero.
+    /// Configured per-prefab in the Inspector so Health doesn't need to know
+    /// whether it belongs to a player, an enemy, or a destructible barrel.
+    /// </summary>
+    public enum DeathBehavior
     {
-        currentHealth = maxHealth;
+        Destroy,
+        RestartScene
     }
 
-    public void TakeDamage(int amount)
+    /// <summary>
+    /// Manages hit points for any damageable object (player, enemy, barrel, etc.).
+    /// Implements IDamageable so projectiles can deal damage via the interface
+    /// without needing to know the concrete type.
+    /// 
+    /// Communication is fully decoupled:
+    /// - C# event OnDamaged: for local subscribers on the same prefab (e.g., EnemyController alerting on hit).
+    /// - ScriptableObject onDeathEvent: for global listeners like UI, Audio, Score managers.
+    /// </summary>
+    public class Health : MonoBehaviour, IDamageable
     {
-        currentHealth -= amount;
-        
-        // Damage Awareness: Alert the enemy if they are shot in the back
-        EnemyController ec = GetComponent<EnemyController>();
-        if (ec != null)
+        [Header("Health Settings")]
+        public int maxHealth = 100;
+        public int currentHealth;
+
+        [Header("Death Configuration")]
+        [Tooltip("What happens when health reaches zero. Set to RestartScene for the player, Destroy for enemies.")]
+        public DeathBehavior deathBehavior = DeathBehavior.Destroy;
+
+        [Tooltip("Optional ScriptableObject event raised on death (e.g., OnPlayerDied, OnEnemyKilled).")]
+        public GameEvent onDeathEvent;
+
+        /// <summary>
+        /// C# event fired every time this object takes damage.
+        /// Subscribe to this from local scripts (e.g., EnemyController subscribes to trigger alert state).
+        /// </summary>
+        public event System.Action OnDamaged;
+
+        private void Start()
         {
-            ec.TriggerAlert();
+            currentHealth = maxHealth;
         }
 
-        if (currentHealth <= 0)
+        /// <summary>
+        /// Applies damage and fires the OnDamaged event.
+        /// If health drops to zero or below, triggers the death sequence.
+        /// </summary>
+        /// <param name="amount">The amount of damage to apply.</param>
+        public void TakeDamage(int amount)
         {
-            Die();
-        }
-    }
+            currentHealth -= amount;
 
-    private void Die()
-    {
-        // Check for PlayerCombat script instead of a tag to guarantee we correctly identify the player
-        if (GetComponent<PlayerCombat>() != null)
-        {
-            Debug.Log("PLAYER DIED! Restarting Scene...");
-            // Restart the active scene
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            // Notify local subscribers (e.g., EnemyController alerting on damage)
+            OnDamaged?.Invoke();
+
+            if (currentHealth <= 0)
+            {
+                Die();
+            }
         }
-        else
+
+        /// <summary>
+        /// Handles the death sequence based on the configured DeathBehavior.
+        /// Raises the optional ScriptableObject death event for global listeners.
+        /// </summary>
+        private void Die()
         {
-            Debug.Log($"{gameObject.name} DIED!");
-            // It's an enemy, destroy it
-            Destroy(gameObject);
+            // Raise the global event so any listener (UI, Audio, Score) can react
+            if (onDeathEvent != null)
+            {
+                onDeathEvent.Raise();
+            }
+
+            switch (deathBehavior)
+            {
+                case DeathBehavior.RestartScene:
+                    Debug.Log("PLAYER DIED! Restarting Scene...");
+                    SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                    break;
+
+                case DeathBehavior.Destroy:
+                default:
+                    Debug.Log($"{gameObject.name} DIED!");
+                    Destroy(gameObject);
+                    break;
+            }
         }
     }
 }

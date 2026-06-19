@@ -1,78 +1,81 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
-[DisallowMultipleComponent]
-public class PlayerMovement : MonoBehaviour
+namespace FPSGame.Player.Movement
 {
-    [SerializeField] private MovementSettings settings = new MovementSettings();
-    [SerializeField] private Rigidbody body;
-    [SerializeField] private GroundChecker groundChecker;
-
-    private Vector3 targetVelocity;
-
-    private void Awake()
+    [RequireComponent(typeof(Rigidbody))]
+    [DisallowMultipleComponent]
+    public class PlayerMovement : MonoBehaviour
     {
-        if (body == null)
+        [SerializeField] private MovementSettings settings = new MovementSettings();
+        [SerializeField] private Rigidbody body;
+        [SerializeField] private GroundChecker groundChecker;
+
+        private Vector3 targetVelocity;
+
+        private void Awake()
         {
-            body = GetComponent<Rigidbody>();
+            if (body == null)
+            {
+                body = GetComponent<Rigidbody>();
+            }
+
+            body.constraints = RigidbodyConstraints.FreezeRotation;
+            body.interpolation = RigidbodyInterpolation.Interpolate;
+
+            if (groundChecker != null)
+            {
+                groundChecker.Configure(settings);
+            }
         }
 
-        body.constraints = RigidbodyConstraints.FreezeRotation;
-        body.interpolation = RigidbodyInterpolation.Interpolate;
-
-        if (groundChecker != null)
+        public void Move(Vector2 input, bool sprinting, Transform referenceTransform, bool rotateToMovement = false)
         {
-            groundChecker.Configure(settings);
-        }
-    }
+            var forward = referenceTransform != null ? referenceTransform.forward : transform.forward;
+            var right = referenceTransform != null ? referenceTransform.right : transform.right;
+            forward.y = 0f;
+            right.y = 0f;
+            forward.Normalize();
+            right.Normalize();
 
-    public void Move(Vector2 input, bool sprinting, Transform referenceTransform, bool rotateToMovement = false)
-    {
-        var forward = referenceTransform != null ? referenceTransform.forward : transform.forward;
-        var right = referenceTransform != null ? referenceTransform.right : transform.right;
-        forward.y = 0f;
-        right.y = 0f;
-        forward.Normalize();
-        right.Normalize();
+            var moveDirection = forward * input.y + right * input.x;
+            if (moveDirection.sqrMagnitude > 1f)
+            {
+                moveDirection.Normalize();
+            }
 
-        var moveDirection = forward * input.y + right * input.x;
-        if (moveDirection.sqrMagnitude > 1f)
-        {
-            moveDirection.Normalize();
-        }
+            var speed = sprinting ? settings.sprintSpeed : settings.moveSpeed;
+            targetVelocity = moveDirection * speed;
 
-        var speed = sprinting ? settings.sprintSpeed : settings.moveSpeed;
-        targetVelocity = moveDirection * speed;
-
-        if (rotateToMovement && moveDirection.sqrMagnitude > 0.01f)
-        {
-            var targetRotation = Quaternion.LookRotation(moveDirection);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.fixedDeltaTime);
-        }
-    }
-
-    public void Jump()
-    {
-        if (groundChecker == null || !groundChecker.IsGrounded)
-        {
-            return;
+            if (rotateToMovement && moveDirection.sqrMagnitude > 0.01f)
+            {
+                var targetRotation = Quaternion.LookRotation(moveDirection);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.fixedDeltaTime);
+            }
         }
 
-        var velocity = body.linearVelocity;
-        velocity.y = 0f;
-        body.linearVelocity = velocity;
-        body.AddForce(Vector3.up * settings.jumpForce, ForceMode.Impulse);
-    }
+        public void Jump()
+        {
+            if (groundChecker == null || !groundChecker.IsGrounded)
+            {
+                return;
+            }
 
-    private void FixedUpdate()
-    {
-        var currentVelocity = body.linearVelocity;
-        var desiredVelocity = new Vector3(targetVelocity.x, currentVelocity.y, targetVelocity.z);
-        var newVelocity = Vector3.MoveTowards(
-            currentVelocity,
-            desiredVelocity,
-            settings.acceleration * Time.fixedDeltaTime);
+            var velocity = body.linearVelocity;
+            velocity.y = 0f;
+            body.linearVelocity = velocity;
+            body.AddForce(Vector3.up * settings.jumpForce, ForceMode.Impulse);
+        }
 
-        body.linearVelocity = newVelocity;
+        private void FixedUpdate()
+        {
+            var currentVelocity = body.linearVelocity;
+            var desiredVelocity = new Vector3(targetVelocity.x, currentVelocity.y, targetVelocity.z);
+            var newVelocity = Vector3.MoveTowards(
+                currentVelocity,
+                desiredVelocity,
+                settings.acceleration * Time.fixedDeltaTime);
+
+            body.linearVelocity = newVelocity;
+        }
     }
 }

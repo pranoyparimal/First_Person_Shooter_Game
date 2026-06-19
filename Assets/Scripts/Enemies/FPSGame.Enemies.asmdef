@@ -1,0 +1,17 @@
+{
+    "name": "FPSGame.Enemies",
+    "rootNamespace": "FPSGame.Enemies",
+    "references": [
+        "FPSGame.Core",
+        "FPSGame.Combat"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
