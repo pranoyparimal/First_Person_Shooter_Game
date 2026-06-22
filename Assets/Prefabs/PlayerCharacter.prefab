@@ -21,6 +21,7 @@ GameObject:
   - component: {fileID: 4465360324234425411}
   - component: {fileID: 4233146368340255310}
   - component: {fileID: 878616233859825785}
+  - component: {fileID: 24883356605370886}
   m_Layer: 0
   m_Name: PlayerCharacter
   m_TagString: Player
@@ -288,8 +289,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af7bf45681a8e864b89969566907bbd9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
-  maxHealth: 100
+  maxHealth: 200
   currentHealth: 0
+  deathBehavior: 1
+  onDeathEvent: {fileID: 11400000, guid: 6bc580739f561f54cb492d508cb02185, type: 2}
 --- !u!114 &878616233859825785
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -304,6 +307,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCombat
   bulletPrefab: {fileID: 2079268874596452571, guid: 36bc451942e153b4d865df49acee7576, type: 3}
   fireRate: 0.2
+  magazineSize: 30
+  totalAmmo: 120
+  reloadTime: 1.5
+--- !u!114 &24883356605370886
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 700000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3c73f2072ac8b948a425133a428e0f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FPSGame.Core::FPSGame.Core.PlayerIdentifier
 --- !u!1 &700000020
 GameObject:
   m_ObjectHideFlags: 0

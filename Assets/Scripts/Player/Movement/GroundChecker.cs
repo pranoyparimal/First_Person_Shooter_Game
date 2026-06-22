@@ -1,25 +1,28 @@
 using UnityEngine;
 
-[DisallowMultipleComponent]
-public class GroundChecker : MonoBehaviour
+namespace FPSGame.Player.Movement
 {
-    [SerializeField] private MovementSettings settings = new MovementSettings();
-
-    public bool IsGrounded { get; private set; }
-
-    private void Update()
+    [DisallowMultipleComponent]
+    public class GroundChecker : MonoBehaviour
     {
-        var origin = transform.position + Vector3.up * 0.1f;
-        IsGrounded = Physics.Raycast(
-            origin,
-            Vector3.down,
-            settings.groundCheckDistance,
-            settings.groundLayers,
-            QueryTriggerInteraction.Ignore);
-    }
+        [SerializeField] private MovementSettings settings = new MovementSettings();
 
-    public void Configure(MovementSettings movementSettings)
-    {
-        settings = movementSettings;
+        public bool IsGrounded { get; private set; }
+
+        private void Update()
+        {
+            var origin = transform.position + Vector3.up * 0.1f;
+            IsGrounded = Physics.Raycast(
+                origin,
+                Vector3.down,
+                settings.groundCheckDistance,
+                settings.groundLayers,
+                QueryTriggerInteraction.Ignore);
+        }
+
+        public void Configure(MovementSettings movementSettings)
+        {
+            settings = movementSettings;
+        }
     }
 }

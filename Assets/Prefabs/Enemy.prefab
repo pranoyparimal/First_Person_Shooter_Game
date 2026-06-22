@@ -142,6 +142,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ffd9487d45458c24ba670c2f1c9fcad4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
+  fieldOfView: 90
+  patrolSpeed: 30
+  patrolAngle: 45
+  isAlert: 0
   moveSpeed: 4
   preferredDistance: 10
   backupDistance: 8
@@ -161,6 +165,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Health
   maxHealth: 100
   currentHealth: 0
+  deathBehavior: 0
+  onDeathEvent: {fileID: 11400000, guid: 1ff75274f26c95a4683f3626d0a46124, type: 2}
 --- !u!1 &260693130917856521
 GameObject:
   m_ObjectHideFlags: 0
