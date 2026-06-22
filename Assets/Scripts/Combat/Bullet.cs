@@ -7,6 +7,8 @@ namespace FPSGame.Combat
     /// A projectile that travels forward and damages the first IDamageable object it hits.
     /// Uses the IDamageable interface so it can damage anything (players, enemies, barrels)
     /// without knowing the concrete type.
+    /// When hitting a Health component specifically, passes the shooter's position
+    /// for directional damage indicators.
     /// </summary>
     public class Bullet : MonoBehaviour
     {
@@ -41,17 +43,34 @@ namespace FPSGame.Combat
                     return;
             }
 
-            // Check if we hit anything that implements IDamageable (Health, destructible barrel, etc.)
-            IDamageable target = other.GetComponent<IDamageable>();
-            if (target == null)
+            // Try to find a Health component first (for directional damage info)
+            Health healthTarget = other.GetComponent<Health>();
+            if (healthTarget == null)
             {
-                target = other.GetComponentInParent<IDamageable>();
+                healthTarget = other.GetComponentInParent<Health>();
             }
 
-            if (target != null)
+            if (healthTarget != null)
             {
-                target.TakeDamage(damage);
+                // Use the directional overload so the victim knows where the shot came from
+                Vector3 sourcePos = shooter != null ? shooter.transform.position : transform.position;
+                healthTarget.TakeDamage(damage, sourcePos);
                 Debug.Log($"Bullet hit {other.name} for {damage} damage!");
+            }
+            else
+            {
+                // Fallback: check for any IDamageable (barrels, etc. that might not use Health)
+                IDamageable target = other.GetComponent<IDamageable>();
+                if (target == null)
+                {
+                    target = other.GetComponentInParent<IDamageable>();
+                }
+
+                if (target != null)
+                {
+                    target.TakeDamage(damage);
+                    Debug.Log($"Bullet hit {other.name} for {damage} damage!");
+                }
             }
 
             // The bullet destroys itself when it hits ANYTHING (walls, floors, or damageable objects)

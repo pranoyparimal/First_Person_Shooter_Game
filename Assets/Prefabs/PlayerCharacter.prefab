@@ -307,6 +307,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCombat
   bulletPrefab: {fileID: 2079268874596452571, guid: 36bc451942e153b4d865df49acee7576, type: 3}
   fireRate: 0.2
+  magazineSize: 30
+  totalAmmo: 120
+  reloadTime: 1.5
 --- !u!114 &24883356605370886
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,17 +1,12 @@
 {
-    "name": "FPSGame.Editor",
-    "rootNamespace": "FPSGame.Editor",
+    "name": "FPSGame.UI",
+    "rootNamespace": "FPSGame.UI",
     "references": [
         "FPSGame.Core",
         "FPSGame.Combat",
-        "FPSGame.Player",
-        "FPSGame.Enemies",
-        "FPSGame.UI",
         "Unity.InputSystem"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using FPSGame.Core;
 
 namespace FPSGame.Player.Movement
 {
@@ -18,9 +19,12 @@ namespace FPSGame.Player.Movement
 
         private void Update()
         {
-            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            // Only manage cursor during active gameplay.
+            // During Paused/GameOver/MainMenu, the GameManager controls the cursor.
+            if (GameManager.Instance != null &&
+                GameManager.Instance.CurrentState != GameManager.GameState.Playing)
             {
-                UnlockCursor();
+                return;
             }
 
             if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame && Cursor.lockState != CursorLockMode.Locked)

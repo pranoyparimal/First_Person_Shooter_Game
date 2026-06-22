@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using FPSGame.Core;
 using FPSGame.Core.Interfaces;
 using FPSGame.Core.Events;
 
@@ -23,6 +24,7 @@ namespace FPSGame.Combat
     /// 
     /// Communication is fully decoupled:
     /// - C# event OnDamaged: for local subscribers on the same prefab (e.g., EnemyController alerting on hit).
+    /// - C# event OnDamagedFromDirection: for UI damage direction indicators.
     /// - ScriptableObject onDeathEvent: for global listeners like UI, Audio, Score managers.
     /// </summary>
     public class Health : MonoBehaviour, IDamageable
@@ -43,6 +45,12 @@ namespace FPSGame.Combat
         /// Subscribe to this from local scripts (e.g., EnemyController subscribes to trigger alert state).
         /// </summary>
         public event System.Action OnDamaged;
+
+        /// <summary>
+        /// C# event fired when damage is received with directional info.
+        /// Passes the world position of the attacker for damage direction indicators.
+        /// </summary>
+        public event System.Action<Vector3> OnDamagedFromDirection;
 
         private void Start()
         {
@@ -68,6 +76,28 @@ namespace FPSGame.Combat
         }
 
         /// <summary>
+        /// Applies damage with directional information.
+        /// Used by bullets to indicate where the shot came from.
+        /// </summary>
+        /// <param name="amount">The amount of damage to apply.</param>
+        /// <param name="sourcePosition">World position of the attacker.</param>
+        public void TakeDamage(int amount, Vector3 sourcePosition)
+        {
+            currentHealth -= amount;
+
+            // Notify local subscribers
+            OnDamaged?.Invoke();
+
+            // Notify directional subscribers (e.g., damage direction indicator on player HUD)
+            OnDamagedFromDirection?.Invoke(sourcePosition);
+
+            if (currentHealth <= 0)
+            {
+                Die();
+            }
+        }
+
+        /// <summary>
         /// Handles the death sequence based on the configured DeathBehavior.
         /// Raises the optional ScriptableObject death event for global listeners.
         /// </summary>
@@ -82,12 +112,26 @@ namespace FPSGame.Combat
             switch (deathBehavior)
             {
                 case DeathBehavior.RestartScene:
-                    Debug.Log("PLAYER DIED! Restarting Scene...");
-                    SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                    // Trigger Game Over screen instead of instant restart
+                    Debug.Log("PLAYER DIED! Showing Game Over screen...");
+                    if (GameManager.Instance != null)
+                    {
+                        GameManager.Instance.SetState(GameManager.GameState.GameOver);
+                    }
+                    else
+                    {
+                        // Fallback if no GameManager exists
+                        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                    }
                     break;
 
                 case DeathBehavior.Destroy:
                 default:
+                    // Track enemy kill in GameManager
+                    if (GameManager.Instance != null)
+                    {
+                        GameManager.Instance.Kills++;
+                    }
                     Debug.Log($"{gameObject.name} DIED!");
                     Destroy(gameObject);
                     break;
