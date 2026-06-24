@@ -12,7 +12,7 @@ namespace FPSGame.Enemies
     /// - Finds the player via PlayerIdentifier (Core assembly), not PlayerCombat.
     /// - Subscribes to Health.OnDamaged event for damage awareness, not direct coupling.
     /// </summary>
-    [RequireComponent(typeof(Rigidbody))]
+    [RequireComponent(typeof(UnityEngine.AI.NavMeshAgent))]
     public class EnemyController : MonoBehaviour
     {
         [Header("Awareness & Stealth")]
@@ -33,7 +33,7 @@ namespace FPSGame.Enemies
         private float fireTimer;
 
         private Transform player;
-        private Rigidbody rb;
+        private UnityEngine.AI.NavMeshAgent agent;
         private Transform gunBarrel;
 
         /// <summary>
@@ -42,7 +42,8 @@ namespace FPSGame.Enemies
         /// </summary>
         private void Start()
         {
-            rb = GetComponent<Rigidbody>();
+            agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+            if (agent != null) agent.speed = moveSpeed;
             startYRotation = transform.eulerAngles.y;
             
             // Find player via the PlayerIdentifier marker component (lives in Core assembly).
@@ -89,9 +90,9 @@ namespace FPSGame.Enemies
         }
 
         /// <summary>
-        /// Handles physics-based movement and rotation based on the current alert state.
+        /// Handles movement and non-physics logic such as weapon firing timers while in combat.
         /// </summary>
-        private void FixedUpdate()
+        private void Update()
         {
             if (player == null) return;
 
@@ -106,18 +107,12 @@ namespace FPSGame.Enemies
             else
             {
                 HandleCombatMovement(distance, directionToPlayer);
+                
+                if (bulletPrefab != null && gunBarrel != null)
+                {
+                    HandleCombatFiring(distance);
+                }
             }
-        }
-
-        /// <summary>
-        /// Handles non-physics logic such as weapon firing timers while in combat.
-        /// </summary>
-        private void Update()
-        {
-            if (player == null || bulletPrefab == null || gunBarrel == null || !isAlert) return;
-
-            float distance = Vector3.Distance(transform.position, player.position);
-            HandleCombatFiring(distance);
         }
 
         /// <summary>
@@ -129,13 +124,15 @@ namespace FPSGame.Enemies
         private void HandleIdlePatrolAndVision(float distanceToPlayer, Vector3 directionToPlayer)
         {
             // 1. Idle Patrol (Scanning)
-            // Stop moving horizontally
-            rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0); 
+            if (agent != null && agent.isOnNavMesh)
+            {
+                agent.isStopped = true;
+            }
             
             // Sweep left and right like a security camera
             float angle = Mathf.Sin(Time.time * patrolSpeed * Mathf.Deg2Rad) * patrolAngle;
             Quaternion rot = Quaternion.Euler(0, startYRotation + angle, 0);
-            rb.MoveRotation(rot);
+            transform.rotation = rot;
 
             // 2. Vision Check
             if (distanceToPlayer <= preferredDistance + 5f)
@@ -167,32 +164,32 @@ namespace FPSGame.Enemies
             if (directionToPlayer.sqrMagnitude > 0.01f)
             {
                 Quaternion targetRot = Quaternion.LookRotation(directionToPlayer);
-                rb.MoveRotation(Quaternion.Slerp(transform.rotation, targetRot, Time.fixedDeltaTime * 10f));
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * 10f);
             }
 
-            Vector3 newVelocity = rb.linearVelocity;
-            Vector3 moveDirection = directionToPlayer.normalized;
+            if (agent == null || !agent.isOnNavMesh) return;
 
             if (distanceToPlayer > preferredDistance)
             {
                 // Chase
-                newVelocity.x = moveDirection.x * moveSpeed;
-                newVelocity.z = moveDirection.z * moveSpeed;
+                agent.isStopped = false;
+                agent.speed = moveSpeed;
+                agent.SetDestination(player.position);
             }
             else if (distanceToPlayer < backupDistance)
             {
                 // Retreat
-                newVelocity.x = -moveDirection.x * moveSpeed;
-                newVelocity.z = -moveDirection.z * moveSpeed;
+                agent.isStopped = false;
+                agent.speed = moveSpeed;
+                Vector3 retreatDirection = -directionToPlayer.normalized;
+                Vector3 retreatPosition = transform.position + retreatDirection * 2f;
+                agent.SetDestination(retreatPosition);
             }
             else
             {
-                // Stop and shoot (stand still horizontally)
-                newVelocity.x = 0;
-                newVelocity.z = 0;
+                // Stop and shoot
+                agent.isStopped = true;
             }
-
-            rb.linearVelocity = newVelocity;
         }
 
         /// <summary>
