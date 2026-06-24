@@ -17,10 +17,10 @@ namespace FPSGame.Enemies
     {
         [Header("Awareness & Stealth")]
         public float fieldOfView = 90f;
-        public float patrolSpeed = 30f;
-        public float patrolAngle = 45f;
+        public float wanderRadius = 15f;
+        public float wanderWaitTime = 3f;
         public bool isAlert = false;
-        private float startYRotation;
+        private float wanderTimer;
 
         [Header("Movement")]
         public float moveSpeed = 4f;
@@ -44,7 +44,7 @@ namespace FPSGame.Enemies
         {
             agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
             if (agent != null) agent.speed = moveSpeed;
-            startYRotation = transform.eulerAngles.y;
+            wanderTimer = wanderWaitTime; // Trigger wander immediately
             
             // Find player via the PlayerIdentifier marker component (lives in Core assembly).
             // This avoids referencing the Player assembly entirely.
@@ -116,23 +116,37 @@ namespace FPSGame.Enemies
         }
 
         /// <summary>
-        /// Controls idle patrol behavior (rotating side to side) and checks if the player 
+        /// Controls idle random wandering and checks if the player 
         /// has entered the 90-degree vision cone and is visible via raycast.
         /// </summary>
         /// <param name="distanceToPlayer">Distance to the player.</param>
         /// <param name="directionToPlayer">Vector direction towards the player.</param>
         private void HandleIdlePatrolAndVision(float distanceToPlayer, Vector3 directionToPlayer)
         {
-            // 1. Idle Patrol (Scanning)
+            // 1. Random Wandering
             if (agent != null && agent.isOnNavMesh)
             {
-                agent.isStopped = true;
+                agent.isStopped = false;
+                agent.speed = moveSpeed * 0.5f; // Walk slower when patrolling
+
+                if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+                {
+                    wanderTimer += Time.deltaTime;
+                    if (wanderTimer >= wanderWaitTime)
+                    {
+                        Vector2 randomCircle = Random.insideUnitCircle * wanderRadius;
+                        Vector3 randomDirection = new Vector3(randomCircle.x, 0, randomCircle.y);
+                        randomDirection += transform.position;
+
+                        UnityEngine.AI.NavMeshHit navHit;
+                        if (UnityEngine.AI.NavMesh.SamplePosition(randomDirection, out navHit, wanderRadius, UnityEngine.AI.NavMesh.AllAreas))
+                        {
+                            agent.SetDestination(navHit.position);
+                        }
+                        wanderTimer = 0f;
+                    }
+                }
             }
-            
-            // Sweep left and right like a security camera
-            float angle = Mathf.Sin(Time.time * patrolSpeed * Mathf.Deg2Rad) * patrolAngle;
-            Quaternion rot = Quaternion.Euler(0, startYRotation + angle, 0);
-            transform.rotation = rot;
 
             // 2. Vision Check
             if (distanceToPlayer <= preferredDistance + 5f)
