@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace FPSGame.Player.Movement
 {
-    [RequireComponent(typeof(Rigidbody))]
     [DisallowMultipleComponent]
     public class PlayerMovement : MonoBehaviour
     {
@@ -28,7 +27,7 @@ namespace FPSGame.Player.Movement
             }
         }
 
-        public void Move(Vector2 input, bool sprinting, Transform referenceTransform, bool rotateToMovement = false)
+        public virtual void Move(Vector2 input, bool sprinting, Transform referenceTransform, bool rotateToMovement = false)
         {
             var forward = referenceTransform != null ? referenceTransform.forward : transform.forward;
             var right = referenceTransform != null ? referenceTransform.right : transform.right;
@@ -53,7 +52,7 @@ namespace FPSGame.Player.Movement
             }
         }
 
-        public void Jump()
+        public virtual void Jump()
         {
             if (groundChecker == null || !groundChecker.IsGrounded)
             {
@@ -66,7 +65,7 @@ namespace FPSGame.Player.Movement
             body.AddForce(Vector3.up * settings.jumpForce, ForceMode.Impulse);
         }
 
-        private void FixedUpdate()
+        protected virtual void FixedUpdate()
         {
             var currentVelocity = body.linearVelocity;
             var desiredVelocity = new Vector3(targetVelocity.x, currentVelocity.y, targetVelocity.z);
