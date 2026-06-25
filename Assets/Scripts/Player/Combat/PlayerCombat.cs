@@ -31,12 +31,12 @@ namespace FPSGame.Player.Combat
         public bool IsReloading { get; private set; }
 
         private float fireTimer;
-        private PerspectiveSwitcher perspectiveSwitcher;
+        private Transform activeCamera;
         private Transform gunBarrel;
 
         private void Start()
         {
-            perspectiveSwitcher = GetComponent<PerspectiveSwitcher>();
+            if (Camera.main != null) activeCamera = Camera.main.transform;
             CurrentAmmo = magazineSize;
 
             Transform gunTransform = transform.Find("HumanoidVisuals/RightArm/Gun");
@@ -48,7 +48,7 @@ namespace FPSGame.Player.Combat
 
         private void Update()
         {
-            if (bulletPrefab == null || gunBarrel == null || perspectiveSwitcher == null) return;
+            if (bulletPrefab == null || gunBarrel == null || activeCamera == null) return;
 
             // Don't process input when game is not playing
             if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameManager.GameState.Playing)
@@ -85,7 +85,6 @@ namespace FPSGame.Player.Combat
 
         private void Shoot()
         {
-            Transform activeCamera = perspectiveSwitcher.ActiveCameraTransform;
             if (activeCamera == null) return;
 
             CurrentAmmo--;

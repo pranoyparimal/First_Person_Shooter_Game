@@ -51,8 +51,6 @@ namespace FPSGame.Editor
             // Remove Player Components
             RemoveComponent<PlayerController>(enemyRoot);
             RemoveComponent<PlayerMovement>(enemyRoot);
-            RemoveComponent<PerspectiveSwitcher>(enemyRoot);
-            RemoveComponent<ThirdPersonLook>(enemyRoot);
             RemoveComponent<FirstPersonLook>(enemyRoot);
             RemoveComponent<PlayerInputReader>(enemyRoot);
 

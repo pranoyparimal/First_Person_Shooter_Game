@@ -12,13 +12,11 @@ namespace FPSGame.Player.Movement
         private InputAction lookAction;
         private InputAction jumpAction;
         private InputAction sprintAction;
-        private InputAction togglePerspectiveAction;
 
         public Vector2 MoveInput { get; private set; }
         public Vector2 LookInput { get; private set; }
         public bool JumpPressed { get; private set; }
         public bool SprintHeld { get; private set; }
-        public bool TogglePerspectivePressed { get; private set; }
 
         private void Awake()
         {
@@ -33,7 +31,6 @@ namespace FPSGame.Player.Movement
             lookAction = playerMap.FindAction("Look", true);
             jumpAction = playerMap.FindAction("Jump", true);
             sprintAction = playerMap.FindAction("Sprint", true);
-            togglePerspectiveAction = playerMap.FindAction("TogglePerspective", true);
         }
 
         private void OnEnable()
@@ -42,7 +39,6 @@ namespace FPSGame.Player.Movement
             lookAction?.Enable();
             jumpAction?.Enable();
             sprintAction?.Enable();
-            togglePerspectiveAction?.Enable();
         }
 
         private void OnDisable()
@@ -51,7 +47,6 @@ namespace FPSGame.Player.Movement
             lookAction?.Disable();
             jumpAction?.Disable();
             sprintAction?.Disable();
-            togglePerspectiveAction?.Disable();
         }
 
         private void Update()
@@ -65,7 +60,6 @@ namespace FPSGame.Player.Movement
             LookInput = lookAction.ReadValue<Vector2>();
             JumpPressed = jumpAction.WasPressedThisFrame();
             SprintHeld = sprintAction.IsPressed();
-            TogglePerspectivePressed = togglePerspectiveAction != null && togglePerspectiveAction.WasPressedThisFrame();
         }
     }
 }

@@ -8,13 +8,13 @@ namespace FPSGame.Player.Movement
     {
         [SerializeField] private PlayerInputReader inputReader;
         [SerializeField] private PlayerMovement movement;
-        [SerializeField] private PerspectiveSwitcher perspectiveSwitcher;
+        [SerializeField] private FirstPersonLook firstPersonLook;
 
         private void Reset()
         {
             inputReader = GetComponent<PlayerInputReader>();
             movement = GetComponent<PlayerMovement>();
-            perspectiveSwitcher = GetComponent<PerspectiveSwitcher>();
+            firstPersonLook = GetComponent<FirstPersonLook>();
         }
 
         private void Awake()
@@ -29,9 +29,9 @@ namespace FPSGame.Player.Movement
                 movement = GetComponent<PlayerMovement>();
             }
 
-            if (perspectiveSwitcher == null)
+            if (firstPersonLook == null)
             {
-                perspectiveSwitcher = GetComponent<PerspectiveSwitcher>();
+                firstPersonLook = GetComponent<FirstPersonLook>();
             }
         }
 
@@ -50,15 +50,9 @@ namespace FPSGame.Player.Movement
             // Block all input (camera look, jumping, perspective toggle) when not playing
             if (!IsInputAllowed()) return;
 
-            if (perspectiveSwitcher != null && inputReader.TogglePerspectivePressed)
+            if (firstPersonLook != null)
             {
-                perspectiveSwitcher.TogglePerspective();
-            }
-
-            var activeLook = perspectiveSwitcher != null ? perspectiveSwitcher.ActiveLookController : null;
-            if (activeLook != null)
-            {
-                activeLook.ApplyLook(inputReader.LookInput);
+                firstPersonLook.ApplyLook(inputReader.LookInput);
             }
 
             if (inputReader.JumpPressed)
@@ -72,11 +66,9 @@ namespace FPSGame.Player.Movement
             // Block movement when not playing
             if (!IsInputAllowed()) return;
 
-            var activeLook = perspectiveSwitcher != null ? perspectiveSwitcher.ActiveLookController : null;
-            bool isThirdPerson = perspectiveSwitcher != null && !perspectiveSwitcher.IsFirstPerson;
-            Transform refTransform = activeLook != null ? activeLook.ReferenceTransform : null;
+            Transform refTransform = firstPersonLook != null ? firstPersonLook.ReferenceTransform : null;
 
-            movement.Move(inputReader.MoveInput, inputReader.SprintHeld, refTransform, isThirdPerson);
+            movement.Move(inputReader.MoveInput, inputReader.SprintHeld, refTransform, false);
         }
     }
 }

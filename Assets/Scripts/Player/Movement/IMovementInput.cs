@@ -8,6 +8,5 @@ namespace FPSGame.Player.Movement
         Vector2 LookInput { get; }
         bool JumpPressed { get; }
         bool SprintHeld { get; }
-        bool TogglePerspectivePressed { get; }
     }
 }

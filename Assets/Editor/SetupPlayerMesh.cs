@@ -97,14 +97,6 @@ namespace FPSGame.Editor
             CreatePart(PrimitiveType.Cylinder, "LeftLeg", new Vector3(-0.15f, -0.3f, 0), new Vector3(0.15f, 0.2f, 0.15f));
             CreatePart(PrimitiveType.Cylinder, "RightLeg", new Vector3(0.15f, -0.3f, 0), new Vector3(0.15f, 0.2f, 0.15f));
 
-            // 4. Assign the HumanoidVisuals to the PerspectiveSwitcher so it gets hidden in First Person
-            PerspectiveSwitcher switcher = prefabRoot.GetComponent<PerspectiveSwitcher>();
-            if (switcher != null)
-            {
-                SerializedObject switcherSo = new SerializedObject(switcher);
-                switcherSo.FindProperty("playerVisuals").objectReferenceValue = visualsRoot;
-                switcherSo.ApplyModifiedProperties();
-            }
 
             // 5. Change the root physical collider from BoxCollider to CapsuleCollider
             BoxCollider boxCol = prefabRoot.GetComponent<BoxCollider>();
