@@ -22,6 +22,7 @@ namespace FPSGame.Player.Combat
         [Header("Ammo Settings")]
         public int magazineSize = 30;
         public int totalAmmo = 120;
+        public bool infiniteReserve = true; // Set to true to allow infinite reloads
         public float reloadTime = 1.5f;
 
         // ─── IAmmoProvider Implementation ────────────────────
@@ -69,7 +70,7 @@ namespace FPSGame.Player.Combat
             // Reload on R key press
             if (Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
             {
-                if (!IsReloading && CurrentAmmo < magazineSize && totalAmmo > 0)
+                if (!IsReloading && CurrentAmmo < magazineSize && (totalAmmo > 0 || infiniteReserve))
                 {
                     StartCoroutine(ReloadCoroutine());
                 }
@@ -77,7 +78,7 @@ namespace FPSGame.Player.Combat
 
             // Auto-reload when magazine is empty and player tries to shoot
             if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame
-                && CurrentAmmo <= 0 && !IsReloading && totalAmmo > 0)
+                && CurrentAmmo <= 0 && !IsReloading && (totalAmmo > 0 || infiniteReserve))
             {
                 StartCoroutine(ReloadCoroutine());
             }
@@ -141,10 +142,13 @@ namespace FPSGame.Player.Combat
             yield return new WaitForSeconds(reloadTime);
 
             int ammoNeeded = magazineSize - CurrentAmmo;
-            int ammoToLoad = Mathf.Min(ammoNeeded, totalAmmo);
+            int ammoToLoad = infiniteReserve ? ammoNeeded : Mathf.Min(ammoNeeded, totalAmmo);
 
             CurrentAmmo += ammoToLoad;
-            totalAmmo -= ammoToLoad;
+            if (!infiniteReserve)
+            {
+                totalAmmo -= ammoToLoad;
+            }
 
             IsReloading = false;
             Debug.Log($"Reload complete! Magazine: {CurrentAmmo}/{magazineSize}, Reserve: {totalAmmo}");
